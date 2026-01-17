@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Build and Publish Release
+    runs-on: ubuntu-latest
+    env:
+      BINARY_NAME: hyrcon-client
+      ARTIFACT_DIR: artifacts
+      RELEASE_ASSET: hyrcon-client-x86_64-unknown-linux-gnu
+      REGISTRY: ghcr.io
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Build release binary
+        env:
+          CARGO_TERM_COLOR: always
+        run: cargo build --release --locked
+
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p "${ARTIFACT_DIR}"
+          cp "target/release/${BINARY_NAME}" "${ARTIFACT_DIR}/${BINARY_NAME}"
+          cp "target/release/${BINARY_NAME}" "${ARTIFACT_DIR}/${RELEASE_ASSET}"
+          chmod +x "${ARTIFACT_DIR}/${BINARY_NAME}" "${ARTIFACT_DIR}/${RELEASE_ASSET}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.RELEASE_ASSET }}
+          path: ${{ env.ARTIFACT_DIR }}/${{ env.RELEASE_ASSET }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Attach binary to GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARTIFACT_DIR }}/${{ env.RELEASE_ASSET }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE_ID=${REGISTRY}/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          TAG=${{ github.event.release.tag_name }}
+          docker build \
+            --pull \
+            -t "${IMAGE_ID}:${TAG}" \
+            -t "${IMAGE_ID}:latest" \
+            .
+          docker push "${IMAGE_ID}:${TAG}"
+          docker push "${IMAGE_ID}:latest"
