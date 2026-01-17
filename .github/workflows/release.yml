@@ -12,12 +12,33 @@ permissions:
 jobs:
   release:
     name: Build and Publish Release
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            release_asset: hyrcon-client-x86_64-unknown-linux-gnu
+            binary_suffix: ""
+          - runner: macos-13
+            target: x86_64-apple-darwin
+            release_asset: hyrcon-client-x86_64-apple-darwin
+            binary_suffix: ""
+          - runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            release_asset: hyrcon-client-x86_64-pc-windows-msvc.exe
+            binary_suffix: ".exe"
     env:
       BINARY_NAME: hyrcon-client
       ARTIFACT_DIR: artifacts
-      RELEASE_ASSET: hyrcon-client-x86_64-unknown-linux-gnu
+      TARGET: ${{ matrix.target }}
+      RELEASE_ASSET: ${{ matrix.release_asset }}
       REGISTRY: ghcr.io
+      BIN_SUFFIX: ${{ matrix.binary_suffix }}
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout repository
@@ -28,6 +49,9 @@ jobs:
         with:
           components: clippy, rustfmt
 
+      - name: Ensure compilation target is installed
+        run: rustup target add "${TARGET}"
+
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
@@ -35,19 +59,22 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('Cargo.lock') }}
 
       - name: Build release binary
         env:
           CARGO_TERM_COLOR: always
-        run: cargo build --release --locked
+        run: cargo build --release --locked --target "${TARGET}"
 
       - name: Prepare release artifacts
         run: |
           mkdir -p "${ARTIFACT_DIR}"
-          cp "target/release/${BINARY_NAME}" "${ARTIFACT_DIR}/${BINARY_NAME}"
-          cp "target/release/${BINARY_NAME}" "${ARTIFACT_DIR}/${RELEASE_ASSET}"
-          chmod +x "${ARTIFACT_DIR}/${BINARY_NAME}" "${ARTIFACT_DIR}/${RELEASE_ASSET}"
+          cp "target/${TARGET}/release/${BINARY_NAME}${BIN_SUFFIX}" "${ARTIFACT_DIR}/${BINARY_NAME}${BIN_SUFFIX}"
+          cp "target/${TARGET}/release/${BINARY_NAME}${BIN_SUFFIX}" "${ARTIFACT_DIR}/${RELEASE_ASSET}"
+      - name: Make binaries executable
+        if: matrix.runner != 'windows-latest'
+        run: |
+          chmod +x "${ARTIFACT_DIR}/${BINARY_NAME}${BIN_SUFFIX}" "${ARTIFACT_DIR}/${RELEASE_ASSET}"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
@@ -65,6 +92,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to GHCR
+        if: matrix.runner == 'ubuntu-latest'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -72,6 +100,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
+        if: matrix.runner == 'ubuntu-latest'
         run: |
           IMAGE_ID=${REGISTRY}/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           TAG=${{ github.event.release.tag_name }}
