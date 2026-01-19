@@ -11,6 +11,35 @@
 - Rust toolchain (1.80+ recommended) with `cargo`.
 - HyRCON RCON server (default port `5522`).
 
+### Installation
+
+#### Prebuilt binaries (Windows, macOS, Linux)
+
+1. Download the latest release archive for your platform from https://github.com/dustinrouillard/hyrcon-client/releases/latest.
+2. Extract the archive to a convenient location. On macOS and Linux mark the binary as executable:
+```bash
+chmod +x ./hyrcon-client
+```
+3. Run the binary directly from that directory (for example `./hyrcon-client` or `.\hyrcon-client.exe`), or move it to a directory on your `PATH` such as `/usr/local/bin`, `~/.local/bin`, or `%USERPROFILE%\.cargo\bin`.
+
+#### macOS & Linux from source (Rustup + Cargo)
+
+1. Install Rust via `rustup` if it isn't already available, then pull the CLI:
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+cargo install --locked --git https://github.com/dustinrouillard/hyrcon-client.git hyrcon-client
+```
+2. Ensure `~/.cargo/bin` is on your `PATH` so `hyrcon-client` is available in new shells (restart the terminal if `cargo` isn't found immediately).
+
+#### Windows from source (PowerShell + Cargo)
+
+1. Install Rust using the official `rustup` package, then install the CLI:
+```powershell
+winget install --id Rustlang.Rustup
+cargo install --locked --git https://github.com/dustinrouillard/hyrcon-client.git hyrcon-client
+```
+2. Confirm `%USERPROFILE%\.cargo\bin` is on your `PATH`, if PowerShell still can't find `cargo`, open a new terminal session or run `& "$env:USERPROFILE\.cargo\env"`.
+
 ### Building from Source
 
 ```bash
@@ -60,4 +89,4 @@ rcon> PING
   PONG
 ```
 
-Use `quit` or `exit` to close the session gracefully; EOF (`Ctrl+D`) will also terminate.
+Use `quit` or `exit` to close the session gracefully, EOF (`Ctrl+D`) will also terminate.
