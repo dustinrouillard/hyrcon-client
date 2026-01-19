@@ -65,12 +65,14 @@ Flags & environment variables:
 
 | Flag / Env            | Description                                        | Default        |
 |-----------------------|----------------------------------------------------|----------------|
-| `--host`, `RCON_HOST` | Server hostname/IP                                 | `127.0.0.1`    |
-| `--port`, `RCON_PORT` | TCP port                                           | `5522`        |
-| `--password`, `RCON_PASSWORD` | Password for `AUTH` handshake            | _none_         |
+| `--host`, `HYRCON_HOST` / `RCON_HOST` | Server hostname/IP                          | `127.0.0.1`    |
+| `--port`, `HYRCON_PORT` / `RCON_PORT` | TCP port                                 | `5522`        |
+| `--password`, `HYRCON_PASSWORD` / `RCON_PASSWORD` | Password for `AUTH` handshake | _none_         |
 | `--timeout-ms`        | Read/write/connect timeout (milliseconds)          | `8000`         |
 | `-v/--verbose`        | Increase log verbosity (repeat for TRACE)          | INFO level     |
 | `--plain`             | Disable colorized output                           | false          |
+
+Environment variables prefixed with `HYRCON_` or `RCON_` are interchangeable; configure whichever form suits your tooling.
 
 Authentication notes:
 

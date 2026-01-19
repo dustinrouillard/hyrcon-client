@@ -10,15 +10,15 @@ use clap::{ArgAction, Parser};
 )]
 pub struct Cli {
   /// Hostname or IP address of the HYRCON server.
-  #[arg(long, env = "RCON_HOST", default_value = "127.0.0.1")]
+  #[arg(long, env = "HYRCON_HOST", default_value = "127.0.0.1")]
   pub host: String,
 
   /// TCP port exposed by the HYRCON server.
-  #[arg(long, env = "RCON_PORT", default_value_t = 5522)]
+  #[arg(long, env = "HYRCON_PORT", default_value_t = 5522)]
   pub port: u16,
 
   /// Password used for the AUTH handshake.
-  #[arg(long, env = "RCON_PASSWORD")]
+  #[arg(long, env = "HYRCON_PASSWORD")]
   pub password: Option<String>,
 
   /// I/O timeout in milliseconds.

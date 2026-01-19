@@ -64,7 +64,7 @@ async fn authenticate_if_required(
     let password = cli
             .password
             .as_deref()
-            .ok_or_else(|| anyhow!("server requires authentication; supply --password or set RCON_PASSWORD"))?;
+            .ok_or_else(|| anyhow!("server requires authentication; supply --password or set HYRCON_PASSWORD"))?;
 
     match client.authenticate(password).await? {
       AuthOutcome::Success => tracing::info!("authentication accepted"),
