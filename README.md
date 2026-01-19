@@ -55,10 +55,10 @@ The optimized binary will be placed at `target/release/hyrcon-client`.
 
 ```bash
 # Execute a single command
-cargo run -- --host 127.0.0.1 --port 5522 -- "say Hello from HyRCON"
+hyrcon-client --host 127.0.0.1 --port 5522 -- "say Hello from HyRCON"
 
 # Start the interactive shell
-cargo run -- --host 127.0.0.1 --port 5522
+hyrcon-client --host 127.0.0.1 --port 5522
 ```
 
 Flags & environment variables:
