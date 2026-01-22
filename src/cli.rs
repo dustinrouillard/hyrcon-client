@@ -1,5 +1,7 @@
 use clap::{ArgAction, Parser};
 
+use crate::protocol::{ParseProtocolError, Protocol};
+
 /// Command-line arguments for the HYRCON client.
 #[derive(Parser, Debug, Clone)]
 #[command(
@@ -13,8 +15,18 @@ pub struct Cli {
   #[arg(long, env = "HYRCON_HOST", default_value = "127.0.0.1")]
   pub host: String,
 
-  /// TCP port exposed by the HYRCON server.
-  #[arg(long, env = "HYRCON_PORT", default_value_t = 5522)]
+  /// RCON wire protocol to speak (`source` or `hyrcon`).
+  #[arg(
+    long,
+    env = "HYRCON_PROTOCOL",
+    default_value_t = Protocol::Source,
+    value_parser = parse_protocol,
+    value_name = "PROTOCOL"
+  )]
+  pub protocol: Protocol,
+
+  /// TCP port exposed by the RCON server.
+  #[arg(long, env = "HYRCON_PORT", default_value_t = 25_575)]
   pub port: u16,
 
   /// Password used for the AUTH handshake.
@@ -36,4 +48,8 @@ pub struct Cli {
   /// One-shot command executed instead of starting the REPL.
   #[arg(value_name = "COMMAND")]
   pub command: Vec<String>,
+}
+
+fn parse_protocol(raw: &str) -> Result<Protocol, ParseProtocolError> {
+  raw.parse()
 }

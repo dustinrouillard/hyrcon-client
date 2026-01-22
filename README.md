@@ -1,6 +1,6 @@
 # HyRCON Client
 
-`hyrcon-client` is a Rust-powered command-line interface for the HyRCON remote console bridge. It speaks the plain-text TCP protocol implemented by `to.dstn.hytale.rcon.RconServer`, giving serverside admins a fast, scriptable alternative to manually attaching via `nc` or interactive tty consoles.
+`hyrcon-client` is a Rust-powered command-line interface for the HyRCON remote console bridge. It speaks the Source RCON protocol by default and can fall back to the plain-text bridge implemented by `to.dstn.hytale.rcon.RconServer`, giving serverside admins a fast, scriptable alternative to manually attaching via `nc` or interactive tty consoles.
 
 ---
 
@@ -9,7 +9,7 @@
 ### Prerequisites
 
 - Rust toolchain (1.80+ recommended) with `cargo`.
-- HyRCON RCON server (default port `5522`).
+- Source-compatible RCON server (default port `25575`), or legacy HyRCON bridge (`5522`).
 
 ### Installation
 
@@ -54,11 +54,11 @@ The optimized binary will be placed at `target/release/hyrcon-client`.
 ### Running the CLI
 
 ```bash
-# Execute a single command
-hyrcon-client --host 127.0.0.1 --port 5522 -- "say Hello from HyRCON"
+# Execute a single command (Source RCON default)
+hyrcon-client --host 127.0.0.1 -- "say Hello from Source RCON"
 
-# Start the interactive shell
-hyrcon-client --host 127.0.0.1 --port 5522
+# Start the interactive shell against a legacy HYRCON bridge
+hyrcon-client --host 127.0.0.1 --protocol hyrcon --port 5522
 ```
 
 Flags & environment variables:
@@ -66,13 +66,14 @@ Flags & environment variables:
 | Flag / Env            | Description                                        | Default        |
 |-----------------------|----------------------------------------------------|----------------|
 | `--host`, `HYRCON_HOST` / `RCON_HOST` | Server hostname/IP                          | `127.0.0.1`    |
-| `--port`, `HYRCON_PORT` / `RCON_PORT` | TCP port                                 | `5522`        |
+| `--protocol`, `HYRCON_PROTOCOL`       | Wire protocol (`source` or `hyrcon`)        | `source`       |
+| `--port`, `HYRCON_PORT` / `RCON_PORT` | TCP port                                   | `25575`        |
 | `--password`, `HYRCON_PASSWORD` / `RCON_PASSWORD` | Password for `AUTH` handshake | _none_         |
 | `--timeout-ms`        | Read/write/connect timeout (milliseconds)          | `8000`         |
 | `-v/--verbose`        | Increase log verbosity (repeat for TRACE)          | INFO level     |
 | `--plain`             | Disable colorized output                           | false          |
 
-Environment variables prefixed with `HYRCON_` or `RCON_` are interchangeable; configure whichever form suits your tooling.
+Environment variables prefixed with `HYRCON_` map onto the same CLI flags (for example `HYRCON_HOST`, `HYRCON_PROTOCOL`, `HYRCON_PORT`, and `HYRCON_PASSWORD`).
 
 Authentication notes:
 

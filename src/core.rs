@@ -22,20 +22,25 @@ pub async fn run(cli: Cli) -> Result<i32> {
   logging::init(cli.verbose, use_color_logs);
 
   let mut client = transport::RconClient::connect(
+    cli.protocol,
     &cli.host,
     cli.port,
     Duration::from_millis(cli.timeout_ms),
   )
   .await
   .with_context(|| {
-    format!("failed to connect to {}:{}", cli.host, cli.port)
+    format!(
+      "failed to connect to {}:{} via {}",
+      cli.host, cli.port, cli.protocol
+    )
   })?;
 
   let greeting = client.greeting().clone();
   tracing::info!(
     auth_required = greeting.requires_auth(),
     banner = greeting.banner(),
-    "connected to HYRCON server"
+    protocol = %client.protocol(),
+    "connected to RCON server"
   );
   ui::render_greeting(&greeting, use_color_stdout);
 
